@@ -1,0 +1,105 @@
+swagger: "2.0"
+
+info:
+  title: "Tid App Api"
+  version: "1.0"
+  description: "Blank"
+  contact:
+    name: Melisa
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+basePath: /v1.0
+
+schemes:
+  - http
+
+paths:
+  /books/get_all_books:
+    get:
+      operationId: api.books.get_all_books
+      produces:
+        - application/json
+      responses:
+        201:
+          description: Successfully got all books
+
+  /books/insert_book:
+    post:
+      operationId: api.books.insert_book
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: cover_image
+          type: file
+          required: true
+          description: The cover image of the book to upload.
+        - in: formData
+          name: book_title
+          type: string
+          required: true
+          description: Title of the book.
+
+      responses:
+        201:
+          description: Successfully added book to the DB
+        400:
+          description: invalid input, object invalid
+        409:
+          description: an existing item already exists
+
+  /book_contents/{book_id}:
+    get:
+      operationId: api.book_contents.get_book_contents
+      parameters:
+        - in: path
+          name: book_id
+          type: string
+          required: true
+          description: Book id to get the sentences of.
+      responses:
+        "200":
+          description: "Fetch a book's sentences from the database"
+          schema:
+            $ref: "#/definitions/Sentence"
+
+  /book_contents/add_sentence:
+    post:
+      operationId: api.book_contents.add_sentence
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: sentence_payload
+          description: Sentence to add
+          schema:
+            $ref: "#/definitions/Sentence"
+      responses:
+        201:
+          description: Successfully added sentence to the DB
+        400:
+          description: invalid input, object invalid
+        409:
+          description: an existing item already exists
+
+definitions:
+  Book:
+    type: object
+    properties:
+      id: { type: string }
+      book_title: { type: string }
+      cover_path: { type: string }
+  Sentence:
+    type: object
+    properties:
+      id: { type: string }
+      nth_sentence: { type: string }
+      book_id: { type: string }
+      sentence: { type: string }
+      transcript: { type: string }
