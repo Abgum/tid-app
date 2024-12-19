@@ -20,6 +20,9 @@ def get_all_books():
 
 @inject
 def insert_book(cover_image, book_title):
+    if not cover_image:
+        return "No file uploaded", 400
+
     print(cover_image)
     if cover_image.filename.split(".")[-1].lower() not in [
         "jpeg",
@@ -28,6 +31,7 @@ def insert_book(cover_image, book_title):
         "webp",
     ]:
         return "Image extension not accepted", 400
+
     file_name = (
         cover_image.filename.split(".")[0]
         + "_"
@@ -35,20 +39,19 @@ def insert_book(cover_image, book_title):
         + "."
         + cover_image.filename.split(".")[-1]
     )
+
     try:
-        with open(
-            Path(
-                ".",
-                "static",
-                "covers",
-                file_name,
-            ),
-            "xb",
-        ) as fp:
+        file_path = Path(".", "static", "covers", file_name)
+        # Create directories if not exist
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, "xb") as fp:
             cover_image.save(fp)
     except FileExistsError:
         return (
-            "Cover with same name exists try with changing the cover image name.",
+            "Cover with the same name exists. Try with a different cover image name.",
             400,
         )
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
+
     return insert_into_books(book_title, file_name), 200

@@ -7,7 +7,7 @@ def create_tables():
     conn_params = {
         "dbname": "postgres",
         "user": "postgres",
-        "password": "1234",
+        "password": "12345",
         "host": "localhost",
         "port": "5432",
     }

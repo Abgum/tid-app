@@ -5,7 +5,7 @@ def _get_conn_params():
     conn_params = {
         "dbname": "TiD_db",
         "user": "postgres",
-        "password": "1234",
+        "password": "12345",
         "host": "localhost",
         "port": "5432",
     }
@@ -85,14 +85,19 @@ def insert_into_tid_transcripts(media_path, transcript):
 
 def get_books():
     # Connection parameters
+    print("get_books")
     conn_params = _get_conn_params()
+    print(conn_params)
     try:
         # Connect to the PostgreSQL server
         conn = psycopg2.connect(**conn_params)
+        print("conn", conn)
         cursor = conn.cursor()
+        print("cursor", cursor)
 
         # Query to fetch sentences ordered by nth_sentence
         query = "SELECT * FROM books "
+        print("query", query)
 
         cursor.execute(query)
         books = cursor.fetchall()
