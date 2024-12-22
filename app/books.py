@@ -529,10 +529,10 @@ class BookCatalogApp(MDApp):
 
         # Kitapları GridLayout'a ekliyoruz
         for book in books:
-            book_id = book.get("book_id", 0)
-            title = book.get("book_title", "Başlık Bilgisi Yok")
-            image_url = book.get("cover_path")
-            deneme = server_url + image_url
+            book_id = book.get("book", 0)
+            title = book.get("title", "Başlık Bilgisi Yok")
+            image_url = book.get("cover")
+            deneme = server_url + "static/covers/"+image_url
 
             book_card = Builder.load_string(f'''
 MDCard:
