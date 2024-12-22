@@ -7,7 +7,7 @@ def _get_conn_params():
         "user": "postgres",
         "password": "12345",
         "host": "localhost",
-        "port": "5432",
+        "port": "5433",
     }
     return conn_params
 

@@ -4,7 +4,7 @@ import json
 with open("Acil.json", "r", encoding="utf-8") as fp:
     acil_json = json.load(fp)
 
-book_id = 2
+book_id = 1
 transformed_list = [
     {
         "nth_sentence": str(index + 1),

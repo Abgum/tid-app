@@ -9,7 +9,7 @@ def create_tables():
         "user": "postgres",
         "password": "12345",
         "host": "localhost",
-        "port": "5432",
+        "port": "5433",
     }
 
     try:
