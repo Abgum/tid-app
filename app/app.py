@@ -3,9 +3,10 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from login import LoginScreen
 from books import BookCatalogApp
 from books_page import BooksPage
-from book_content_page import BookContentPage
 from kivy.core.window import Window
 from kivymd.app import MDApp
+from books_transcript import BookContentPage
+from backend.api.users import create_user
 
 
 class BookApp(App):

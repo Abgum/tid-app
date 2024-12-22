@@ -14,7 +14,9 @@ from kivymd.uix.navigationdrawer import MDNavigationDrawer
 from kivymd.uix.navigationdrawer import MDNavigationDrawerMenu
 from kivymd.icon_definitions import md_icons
 from kivymd.uix.list import OneLineIconListItem
-
+from kivy.metrics import dp
+from kivy.uix.gridlayout import GridLayout
+from kivy.lang import Builder
 
 # Sunucu URL'si
 server_url = "http://127.0.0.1:2020/"
@@ -23,7 +25,7 @@ server_url = "http://127.0.0.1:2020/"
 
 
 def get_books():
-    response = requests.get(server_url + "v1.0/books/get_all_books")
+    response = requests.get(server_url + "api/books/get_all_books")
     if response.status_code == 200:
         return response.json()  # JSON formatında kitap verilerini döndürür
     return []
@@ -31,8 +33,24 @@ def get_books():
 # Kitap içeriğini almak için fonksiyon
 
 
+def load_book_content(self, book_id):
+    # Set the current book ID
+    # Initialize current_book_id here if not done already
+    self.current_book_id = book_id
+
+    # Load book content from the API
+    book_content = get_book_content_by_id(book_id)
+    if book_content:
+        # Listenin ilk öğesini alıyoruz (örneğin, kitap içeriği)
+        book_details = book_content[0]  # Liste ise ilk öğeye erişim
+        title = book_details.get("book_title", "Başlık Bilgisi Yok")
+        content = book_details.get("sentence", "İçerik bulunamadı.")
+        self.root.ids.book_title.text = title
+        self.root.ids.book_content.text = content
+
+
 def get_book_content_by_id(book_id):
-    response = requests.get(server_url + "v1.0/book_contents/" + str(book_id))
+    response = requests.get(server_url + "/book_contents/" + str(book_id))
     if response.status_code == 200:
         return response.json()  # JSON formatında içerik verisini döndürür
     return {}
@@ -44,7 +62,7 @@ BoxLayout:
 
     MDTopAppBar:
         id: top_app_bar
-        title: "Kitap Kataloğu"
+        title: "Sessizce Oku"
         md_bg_color: app.theme_cls.primary_color
         specific_text_color: 1, 1, 1, 1
         elevation: 10
@@ -59,7 +77,7 @@ BoxLayout:
                 name: 'login'
                 BoxLayout:
                     orientation: 'vertical'
-                    padding: "30dp"
+                    padding: "50dp"
                     spacing: "20dp"
 
                     MDLabel:
@@ -68,40 +86,54 @@ BoxLayout:
                         theme_text_color: "Secondary"
 
                     MDTextField:
-                        id: username
-                        hint_text: "Kullanıcı Adı"
+                        id: login_username
+                        hint_text: "Email"
                         size_hint_y: None
-                        height: "40dp"
+                        height: "0dp"
                         pos_hint: {"center_x": 0.5}
 
                     MDTextField:
                         id: password
                         hint_text: "Şifre"
                         size_hint_y: None
-                        height: "40dp"
+                        height: "0dp"
                         password: True
                         pos_hint: {"center_x": 0.5}
-
-                    MDRaisedButton:
-                        text: "Giriş Yap"
+                    GridLayout:
+                        cols: 3
                         size_hint_y: None
                         height: "50dp"
+                        spacing: "60dp"
                         pos_hint: {"center_x": 0.5}
-                        on_release: app.login()
+                        MDRaisedButton:
+                            text: "Giriş Yap"
+                            size_hint_y: None
+                            height: "50dp"
+                            width: "120dp"
+                            padding: "10dp", "10dp", "10dp", "10dp"
+                            spacing: "40dp"
+                            pos_hint: {"center_x": 0.5}
+                            on_release: app.login()
 
-                    MDRaisedButton:
-                        text: "Kayıt Ol"
-                        size_hint_y: None
-                        height: "50dp"
-                        pos_hint: {"center_x": 0.5}
-                        on_release: app.go_to_register()
+                        MDRaisedButton:
+                            text: "Kayıt Ol"
+                            size_hint_y: None
+                            height: "50dp"
+                            spacing: "40dp"
+                            width: "120dp"
+                            padding: "10dp", "10dp", "10dp", "10dp"
+                            pos_hint: {"center_x": 0.5}
+                            on_release: app.go_to_register()
 
-                    MDRaisedButton:
-                        text: "Şifremi Unuttum"
-                        size_hint_y: None
-                        height: "50dp"
-                        pos_hint: {"center_x": 0.5}
-                        on_release: app.go_to_forgot_password()
+                        MDRaisedButton:
+                            text: "Şifremi Unuttum"
+                            size_hint_y: None
+                            height: "50dp"
+                            width: "120dp"
+                            spacing: "40dp"
+                            padding: "10dp", "10dp", "10dp", "10dp"
+                            pos_hint: {"center_x": 0.5}
+                            on_release: app.go_to_forgot_password()
 
             # Register Screen
             Screen:
@@ -137,20 +169,25 @@ BoxLayout:
                         size_hint_y: None
                         height: "40dp"
                         pos_hint: {"center_x": 0.5}
-
-                    MDRaisedButton:
-                        text: "Kayıt Ol"
+                    GridLayout:
+                        cols: 2
                         size_hint_y: None
                         height: "50dp"
+                        spacing: "225dp"
                         pos_hint: {"center_x": 0.5}
-                        on_release: app.register()
+                        MDRaisedButton:
+                            text: "Kayıt Ol"
+                            size_hint_y: None
+                            height: "50dp"
+                            pos_hint: {"center_x": 0.5}
+                            on_release: app.register()
 
-                    MDRaisedButton:
-                        text: "Geri Gel"
-                        size_hint_y: None
-                        height: "50dp"
-                        pos_hint: {"center_x": 0.5}
-                        on_release: app.go_to_login()
+                        MDRaisedButton:
+                            text: "Giriş Yap"
+                            size_hint_y: None
+                            height: "50dp"
+                            pos_hint: {"center_x": 0.5}
+                            on_release: app.go_to_login()
 
             # Forgot Password Screen
             Screen:
@@ -171,20 +208,25 @@ BoxLayout:
                         size_hint_y: None
                         height: "40dp"
                         pos_hint: {"center_x": 0.5}
-
-                    MDRaisedButton:
-                        text: "Şifreyi Sıfırla"
+                    GridLayout:
+                        cols: 2
                         size_hint_y: None
                         height: "50dp"
+                        spacing: "225dp"
                         pos_hint: {"center_x": 0.5}
-                        on_release: app.reset_password()
+                        MDRaisedButton:
+                            text: "Şifreyi Sıfırla"
+                            size_hint_y: None
+                            height: "50dp"
+                            pos_hint: {"center_x": 0.5}
+                            on_release: app.reset_password()
 
-                    MDRaisedButton:
-                        text: "Geri Dön"
-                        size_hint_y: None
-                        height: "50dp"
-                        pos_hint: {"center_x": 0.5}
-                        on_release: app.go_to_login()
+                        MDRaisedButton:
+                            text: "Giriş Yap"
+                            size_hint_y: None
+                            height: "75dp"
+                            pos_hint: {"center_x": 0.5}
+                            on_release: app.go_to_login()
 
             # Books Screen
             Screen:
@@ -196,7 +238,7 @@ BoxLayout:
                     orientation: 'vertical'
 
                     MDTopAppBar:
-                        title: "Kitap Kataloğu"
+                        title: "Sessizce Oku"
                         md_bg_color: app.theme_cls.primary_color
                         specific_text_color: 1, 1, 1, 1
                         elevation: 10
@@ -220,7 +262,72 @@ BoxLayout:
                                     MDRaisedButton:
                                         text: "Oku"
 
-       
+            Screen:
+                name:"read_book"
+                id:read_book_screen
+                BoxLayout:
+                    orientation: 'vertical'
+
+                    MDTopAppBar:
+                        title: "Kitap İçeriği"
+                        md_bg_color: app.theme_cls.primary_color
+                        specific_text_color: 1, 1, 1, 1
+                        elevation: 10
+                        left_action_items: [["arrow-left", lambda x: app.go_to_books_screen()]]
+
+                    ScrollView:
+                        MDGridLayout:
+                            cols: 1
+                            spacing: "16dp"
+                            padding: "20dp"
+                            size_hint_y: None
+                            height: self.minimum_height
+
+                            MDLabel:
+                                id: book_title
+                                text: "Kitap Başlığı"
+                                theme_text_color: "Secondary"
+
+                            MDLabel:
+                                id: book_content
+                                text: "Kitap İçeriği"
+                                theme_text_color: "Secondary"
+
+                            # Cümlelerin ve videoların kaydırılabilir kısmı
+                            ScrollView:
+                                GridLayout:
+                                    size_hint_y: None
+                                    height: self.minimum_height
+                                    MDLabel:
+                                        id: sentence_text
+                                        text: "Cümleler ve içerik"
+                                        theme_text_color: "Secondary"
+                                    # GIF veya video eklemek için buraya dinamik içerikler eklenebilir
+                                    BoxLayout:
+                                        id: transcript_layout
+                                        orientation: 'vertical'
+                                        size_hint_y: None
+                                        height: self.minimum_height
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        size_hint_y: None
+                        height: "60dp"
+                        spacing: "20dp"
+                        padding: "130dp", "20dp", "130dp", "20dp"
+                        pos_hint: {"center_y": 0.1}
+
+                        MDRaisedButton:
+                            text: "Önceki"
+                            size_hint_y: None
+                            height: "50dp"
+                            on_release: app.show_previous_sentence()
+
+                        MDRaisedButton:
+                            text: "Sonraki"
+                            size_hint_y: None
+                            height: "50dp"
+                            on_release: app.show_next_sentence()       
+
 
         MDNavigationDrawer:
             id: nav_drawer
@@ -283,7 +390,90 @@ class BookCatalogApp(MDApp):
             # Hide profile menu (close it)
             profile_menu.height = "0dp"
 
+    def go_to_books_screen(self):
+        self.root.ids.screen_manager.current = "books"
+
+    def go_to_read_book_screen(self, book_id):
+        # Set the current book ID
+        self.current_book_id = book_id  # Initialize current_book_id here
+
+        print(f"Kitap okunuyor...")
+
+        self.root.ids.screen_manager.current = "read_book"
+        print(f"Kitap okundu sanki")
+        self.load_book_content(book_id)
+
+    def load_book_content(self, book_id):
+        print(f"Kitap içeriği yükleniyor...")
+        book_content = get_book_content_by_id(book_id)
+
+        if book_content:
+            # Listenin tüm öğelerini alıyoruz (örneğin, kitap içeriği)
+            self.book_details = book_content
+            print(f"Kitap detayları: {self.book_details}")
+            title = self.book_details[0].get(
+                "book_title", "Başlık Bilgisi Yok")
+            self.root.ids.book_title.text = title
+            self.show_next_sentence()  # İlk cümleyi göster
+
+    def show_previous_sentence(self):
+        current_sentence = self.root.ids.sentence_text.text
+        sentences = self.get_current_sentences()
+
+        if current_sentence not in sentences:
+            current_index = 0
+        else:
+            current_index = sentences.index(current_sentence)
+
+        if current_index > 0:
+            previous_sentence = sentences[current_index - 1]
+            self.root.ids.sentence_text.text = previous_sentence
+            self.update_transcript(current_index - 1)
+
+    def show_next_sentence(self):
+        current_sentence = self.root.ids.sentence_text.text
+        sentences = self.get_current_sentences()
+
+        if current_sentence not in sentences:
+            current_index = -1
+        else:
+            current_index = sentences.index(current_sentence)
+
+        if current_index < len(sentences) - 1:
+            next_sentence = sentences[current_index + 1]
+            self.root.ids.sentence_text.text = next_sentence
+            self.update_transcript(current_index + 1)
+
+    def update_transcript(self, index):
+        transcript = self.book_details[index].get('transcript', '')
+        transcript_parts = transcript.split(',')
+
+    # Clear the existing transcript parts in the UI
+        self.root.ids.transcript_layout.clear_widgets()
+
+    # Add each transcript part to the UI
+        for part in transcript_parts:
+            part_label = MDLabel(text=part, theme_text_color="Secondary")
+            self.root.ids.transcript_layout.add_widget(part_label)
+
+        print(f"Transcript parts: {transcript_parts}")
+        self.root.ids.transcript_layout.height = len(
+            transcript_parts) * 50  # Adjust the height as needed
+        self.root.ids.transcript_layout.size_hint_y = None
+
+    def get_current_sentences(self):
+        # Check if book_details is set
+        if not hasattr(self, 'book_details'):
+            print("No book details available!")
+            return []
+
+    # Extract sentences from book details
+        sentences = [detail.get('sentence', '')
+                     for detail in self.book_details]
+        return sentences
+
     # Toggle Menü Fonksiyonu
+
     def toggle_menu(self):
         nav_drawer = self.root.ids.nav_drawer
         if nav_drawer.state == "open":
@@ -296,11 +486,11 @@ class BookCatalogApp(MDApp):
         self.root.ids.screen_manager.current = "login"  # Return to login screen
 
     def login(self):
-        username = self.root.ids.username.text
+        email = self.root.ids.login_username.text
         password = self.root.ids.password.text
-
+        print(f"Kullanıcı adı: {email}, Şifre: {password}")
         # Kullanıcı adı ve şifre kontrolü
-        if username == "root" and password == "1234":
+        if email == "root" and password == "1234":
             # Kullanıcı adı ve şifre doğruysa, kitaplar sayfasına geçiş yap
             self.root.ids.screen_manager.current = "books"
             # Kitapları yükle
@@ -308,9 +498,9 @@ class BookCatalogApp(MDApp):
             return
 
         # Sunucuya giriş bilgilerini gönder
-        login_url = server_url + "v1.0/auth/login"
+        login_url = server_url + "api/users/login"
         data = {
-            "username": username,
+            "email": email,
             "password": password
         }
         response = requests.post(login_url, json=data)
@@ -326,16 +516,25 @@ class BookCatalogApp(MDApp):
 
     def load_books(self):
         books = get_books()
-        book_cards = ""
 
+        # ScrollView içinde bir GridLayout oluşturuyoruz
+        book_grid = GridLayout(
+            cols=2,  # Her satırda 2 sütun
+            spacing=dp(10),
+            padding=dp(10),
+            size_hint_y=None  # Dinamik olarak yüksekliği ayarlamak için
+        )
+        book_grid.bind(minimum_height=book_grid.setter(
+            'height'))  # İçeriğe göre yüksekliği ayarla
+
+        # Kitapları GridLayout'a ekliyoruz
         for book in books:
-            # Her kitap için bir MDCard ekle
             book_id = book.get("book_id", 0)
             title = book.get("book_title", "Başlık Bilgisi Yok")
             image_url = book.get("cover_path")
             deneme = server_url + image_url
 
-            book_cards += '''
+            book_card = Builder.load_string(f'''
 MDCard:
     size_hint: None, None
     size: "180dp", "300dp"
@@ -343,21 +542,19 @@ MDCard:
     radius: [12,]
     orientation: "vertical"
     padding: "8dp"
-    # Burada kartın sola hizalanmasını sağlıyoruz
-    pos_hint: {"top": 1, "left": 0.1}  # Kartları sola hizalayın
 
     MDSmartTile:
         radius: 12
         box_radius: [0, 0, 12, 12]
         box_color: 1, 1, 1, .2
-        source: "%s"
+        source: "{deneme}"
         size_hint: None, None
         size: "180dp", "240dp"
-        pos_hint: {"center_x": .5}
+        pos_hint: {{"center_x": .5}}
         overlap: False
         lines: 2
-        text: "%s"
-        on_release: app.read_book( % d)  # Resme tıklama ile kitabı oku fonksiyonu
+        text: "{title}"
+        on_release: app.read_book({book_id})
 
     BoxLayout:
         orientation: 'horizontal'
@@ -368,23 +565,30 @@ MDCard:
 
         MDIconButton:
             icon: "heart"
-            on_release: app.add_to_favorites( % d)  # Favorilere ekle
+            on_release: app.add_to_favorites({book_id})
             size_hint: None, None
             size: "40dp", "40dp"
 
         MDIconButton:
             icon: "bookmark-plus"
-            on_release: app.add_to_read_later( % d)  # Okunacaklara ekle
+            on_release: app.add_to_read_later({book_id})
             size_hint: None, None
             size: "40dp", "40dp"
-''' % (deneme, title, book_id, book_id, book_id)
-    # Kitap kartlarını dinamik olarak yükle
+            ''')
+            book_grid.add_widget(book_card)
+
+        # ScrollView içine GridLayout'u yerleştiriyoruz
+        scroll_view = ScrollView(size_hint=(1, 1))
+        scroll_view.add_widget(book_grid)
+
+        # Kitap ekranını temizleyip ScrollView'u ekliyoruz
         self.root.ids.books_screen.clear_widgets()
-        self.root.ids.books_screen.add_widget(Builder.load_string(book_cards))
+        self.root.ids.books_screen.add_widget(scroll_view)
 
     def read_book(self, book_id):
+        print(f"Kitap {book_id} okunuyor...")
         book_content = get_book_content_by_id(book_id)
-        print(f"Kitap İçeriği: {book_content}")
+        print(f"Kitap İçeriğibuudur")
 
     def add_to_favorites(self, book_id):
         print(f"Kitap {book_id} favorilere eklendi!")
@@ -416,26 +620,31 @@ MDCard:
             print("Şifre sıfırlama başarısız!")
 
     def register(self):
-        # Kayıt işlemi için veriyi al
         username = self.root.ids.register_username.text
         password = self.root.ids.register_password.text
         email = self.root.ids.register_email.text
 
-        # Sunucuya kayıt bilgilerini gönder
-        register_url = server_url + "v1.0/auth/register"
+        register_url = server_url + "api/users/register"
+        print(f"Kayıt URL'si: {register_url}")
+        print(
+            f"Kullanıcı adı: {username}, Şifre: {password}, E-posta: {email}")
         data = {
-            "username": username,
-            "password": password,
-            "email": email
+            "user_name": username,
+            "email": email,
+            "password": password
         }
-        response = requests.post(register_url, json=data)
 
-        if response.status_code == 200:
-            # Kayıt başarılıysa, login ekranına geri dön
-            self.root.ids.screen_manager.current = "login"
-        else:
-            # Kayıt başarısızsa hata mesajı
-            print("Kayıt başarısız!")
+        try:
+            response = requests.post(register_url, json=data)
+
+            if response.status_code == 201:
+                self.root.ids.screen_manager.current = "login"
+            else:
+                print(
+                    f"Kayıt başarısız! Hata: {response.json().get('error', 'Bilinmeyen bir hata')}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"Sunucu hatası: {str(e)}")
 
     def go_to_login(self):
         self.root.ids.screen_manager.current = "login"
@@ -444,15 +653,17 @@ MDCard:
         self.set_theme()
 
     def set_theme(self):
-        if self.theme_cls.theme_style == "Light":
-            self.theme_cls.theme_style = "Dark"
-        else:
-            self.theme_cls.theme_style = "Light"
+        # Arka plan rengini ekru (#FFF4E6) olarak ayarla
+        self.theme_cls.primary_hue = "300"
+        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.primary_palette = "Purple"  # Lila
 
-        if self.theme_cls.primary_palette == "Orange":
-            self.theme_cls.primary_palette = "Green"
-        else:
-            self.theme_cls.primary_palette = "Orange"
+        # Renk paletlerini isteğe göre ayarla
+        if self.theme_cls.primary_palette == "Purple":
+            self.theme_cls.primary_palette = "Purple"  # Alternatif
+            self.theme_cls.accent_palette = "Gray"
+
+    # Seçilecek renkler öncelikli  eşleşen bilği net olur sonra opsiyon dondurtular
 
 
 BookCatalogApp().run()

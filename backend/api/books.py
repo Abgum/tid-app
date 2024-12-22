@@ -1,28 +1,30 @@
-from flask_injector import inject
-from data_access.db_access import get_books, insert_into_books
+from data_access import books, user_favorited_books
 from pathlib import Path
 from random import Random
+import sys
 
 
-@inject
 def get_all_books():
-    books = []
-    for book in get_books():
-        books.append(
-            {
-                "book_id": book[0],
-                "title": book[1],
-                "cover_path": "static/covers/" + book[2],
-            }
-        )
-    return books, 200
+    return books.get_all_books(), 200
 
 
-@inject
+def get_user_favorite_books(user_id):
+    return user_favorited_books.get_user_favorite_books(user_id), 200
+
+
+def add_favorite_book(favorite_payload):
+    return user_favorited_books.create_user_favorited_book(
+        favorite_payload["user_id"], favorite_payload["book_id"]
+    ), 200
+
+
+def remove_favorite_book(favorite_payload):
+    return user_favorited_books.delete_user_favorited_book(
+        favorite_payload["user_id"], favorite_payload["book_id"]
+    ), 200
+
+
 def insert_book(cover_image, book_title):
-    if not cover_image:
-        return "No file uploaded", 400
-
     print(cover_image)
     if cover_image.filename.split(".")[-1].lower() not in [
         "jpeg",
@@ -31,7 +33,6 @@ def insert_book(cover_image, book_title):
         "webp",
     ]:
         return "Image extension not accepted", 400
-
     file_name = (
         cover_image.filename.split(".")[0]
         + "_"
@@ -39,19 +40,23 @@ def insert_book(cover_image, book_title):
         + "."
         + cover_image.filename.split(".")[-1]
     )
-
+    Path(Path(sys.argv[0]).parent, "static", "covers").mkdir(
+        parents=True, exist_ok=True
+    )
     try:
-        file_path = Path(".", "static", "covers", file_name)
-        # Create directories if not exist
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, "xb") as fp:
+        with open(
+            Path(
+                Path(sys.argv[0]).parent,
+                "static",
+                "covers",
+                file_name,
+            ),
+            "xb",
+        ) as fp:
             cover_image.save(fp)
     except FileExistsError:
         return (
-            "Cover with the same name exists. Try with a different cover image name.",
+            "Cover with same name exists try with changing the cover image name.",
             400,
         )
-    except Exception as e:
-        return f"An error occurred: {str(e)}", 500
-
-    return insert_into_books(book_title, file_name), 200
+    return books.create_book(book_title, file_name), 200

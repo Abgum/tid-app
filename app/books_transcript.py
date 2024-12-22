@@ -3,12 +3,12 @@ from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.image import AsyncImage
 from kivy.uix.boxlayout import BoxLayout
-from data_requests import server_url
 from kivy.uix.video import Video
+from data_requests import server_url
 
 
 class BookContentPage(BoxLayout):
-    page_name = "book_content"
+    page_name = "book_transcript"
     readable_name = "Kitap İçeriği"
 
     def __init__(self, screen_manager, **kwargs):
