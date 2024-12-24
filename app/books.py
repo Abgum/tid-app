@@ -17,12 +17,27 @@ from kivymd.uix.list import OneLineIconListItem
 from kivy.metrics import dp
 from kivy.uix.gridlayout import GridLayout
 from kivy.lang import Builder
+from kivy.core.window import Window
+from kivy.utils import platform
+from kivy.uix.popup import Popup
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+import hashlib
 
+
+if platform == 'android' or platform == 'ios':
+    # Mobil cihazlar için tam ekran
+    Window.fullscreen = True
+else:
+    # Masaüstü için belirli bir boyut
+    Window.size = (360, 640)
 # Sunucu URL'si
 server_url = "http://127.0.0.1:2020/"
 
 # Kitapları almak için fonksiyon
 
+def hash_password(password):
+    hashlib.sha512(password.encode("utf-8")).hexdigest(),
 
 def get_books():
     response = requests.get(server_url + "api/books/get_all_books")
@@ -31,7 +46,36 @@ def get_books():
     return []
 
 # Kitap içeriğini almak için fonksiyon
+def show_popup(title, message):
+    popup_content = BoxLayout(orientation='vertical', spacing=10, padding=10)
+    popup_content.add_widget(Label(text=message))
+    
+    close_button = Button(text="Tamam", size_hint=(1, 0.3))
+    popup_content.add_widget(close_button)
+    
+    popup = Popup(title=title,
+                content=popup_content,
+                size_hint=(0.8, 0.4),
+                auto_dismiss=False)
+    
+    close_button.bind(on_release=popup.dismiss)
+    popup.open()
 
+# Şifre ve kullanıcı adı kontrol fonksiyonu
+def check_user_credentials(users, username, password):
+    print(f"mail {username}, password {password}")
+    for user in users:
+        print(f"user {user}")
+        if user.get('email') == username and user.get('password') == password:
+            return True
+    return False
+
+# Şifreyi ya da kullanıcı adını almak için bir fonksiyon
+def get_user_info(users, key, value, field):
+    for user in users:
+        if user.get(key) == value:
+            return user.get(field)
+    return None
 
 def load_book_content(self, book_id):
     # Set the current book ID
@@ -50,11 +94,18 @@ def load_book_content(self, book_id):
 
 
 def get_book_content_by_id(book_id):
-    response = requests.get(server_url + "/book_contents/" + str(book_id))
+    response = requests.get(server_url + "api/book_contents/" + str(book_id))
+    col2_grid = GridLayout(
+            cols=2,
+            spacing= dp(10),
+            padding=[ dp(10), dp(10)],  # Sol ve sağ padding
+            size_hint_y=None  # Yüksekliği içeriğe göre ayarla
+        )
+    col2_grid.bind(minimum_height=col2_grid.setter('height'))  # İçeriğe göre yüksekliği ayarla
+    
     if response.status_code == 200:
         return response.json()  # JSON formatında içerik verisini döndürür
     return {}
-
 
 KV = '''
 BoxLayout:
@@ -99,41 +150,36 @@ BoxLayout:
                         height: "0dp"
                         password: True
                         pos_hint: {"center_x": 0.5}
-                    GridLayout:
-                        cols: 3
+                    BoxLayout:
+                        orientation: "horizontal"
+                        spacing: "10dp"
                         size_hint_y: None
                         height: "50dp"
-                        spacing: "60dp"
+                        size_hint_x: 1
                         pos_hint: {"center_x": 0.5}
+
                         MDRaisedButton:
                             text: "Giriş Yap"
-                            size_hint_y: None
-                            height: "50dp"
-                            width: "120dp"
-                            padding: "10dp", "10dp", "10dp", "10dp"
-                            spacing: "40dp"
-                            pos_hint: {"center_x": 0.5}
+                            size_hint_x: 1
                             on_release: app.login()
 
                         MDRaisedButton:
                             text: "Kayıt Ol"
-                            size_hint_y: None
-                            height: "50dp"
-                            spacing: "40dp"
-                            width: "120dp"
-                            padding: "10dp", "10dp", "10dp", "10dp"
-                            pos_hint: {"center_x": 0.5}
+                            size_hint_x: 1
                             on_release: app.go_to_register()
+
+                    BoxLayout:
+                        orientation: "horizontal"
+                        size_hint_y: None
+                        height: "50dp"
+                        size_hint_x: 1
+                        pos_hint: {"center_x": 0.5}
 
                         MDRaisedButton:
                             text: "Şifremi Unuttum"
-                            size_hint_y: None
-                            height: "50dp"
-                            width: "120dp"
-                            spacing: "40dp"
-                            padding: "10dp", "10dp", "10dp", "10dp"
-                            pos_hint: {"center_x": 0.5}
+                            size_hint_x: 1
                             on_release: app.go_to_forgot_password()
+
 
             # Register Screen
             Screen:
@@ -169,25 +215,26 @@ BoxLayout:
                         size_hint_y: None
                         height: "40dp"
                         pos_hint: {"center_x": 0.5}
-                    GridLayout:
-                        cols: 2
+
+                    # Yeni BoxLayout ile butonları hizalayalım
+                    BoxLayout:
+                        orientation: "horizontal"
+                        spacing: "10dp"
                         size_hint_y: None
                         height: "50dp"
-                        spacing: "225dp"
+                        size_hint_x: 1
                         pos_hint: {"center_x": 0.5}
+
                         MDRaisedButton:
                             text: "Kayıt Ol"
-                            size_hint_y: None
-                            height: "50dp"
-                            pos_hint: {"center_x": 0.5}
+                            size_hint_x: 1
                             on_release: app.register()
 
                         MDRaisedButton:
                             text: "Giriş Yap"
-                            size_hint_y: None
-                            height: "50dp"
-                            pos_hint: {"center_x": 0.5}
+                            size_hint_x: 1
                             on_release: app.go_to_login()
+
 
             # Forgot Password Screen
             Screen:
@@ -208,25 +255,47 @@ BoxLayout:
                         size_hint_y: None
                         height: "40dp"
                         pos_hint: {"center_x": 0.5}
-                    GridLayout:
-                        cols: 2
+                    MDTextField:
+                        id: old_password
+                        hint_text: "Eski Şifre"
+                        size_hint_y: None
+                        height: "40dp"
+                        password: True
+                        pos_hint: {"center_x": 0.5}
+                    MDTextField:
+                        id: new_password
+                        hint_text: "Yeni Şifre"
+                        size_hint_y: None
+                        height: "40dp"
+                        password: True
+                        pos_hint: {"center_x": 0.5}                    
+                    MDTextField:
+                        id: confirm_new_password
+                        hint_text: "Yeni Şifreyi Tekrar Gir"
+                        size_hint_y: None
+                        password: True
+                        height: "40dp"
+                        pos_hint: {"center_x": 0.5}
+
+                    # Yeni BoxLayout ile butonları hizalayalım
+                    BoxLayout:
+                        orientation: "horizontal"
+                        spacing: "10dp"
                         size_hint_y: None
                         height: "50dp"
-                        spacing: "225dp"
+                        size_hint_x: 1
                         pos_hint: {"center_x": 0.5}
+
                         MDRaisedButton:
-                            text: "Şifreyi Sıfırla"
-                            size_hint_y: None
-                            height: "50dp"
-                            pos_hint: {"center_x": 0.5}
+                            text: "Şifreyi Değiştir"
+                            size_hint_x: 1
                             on_release: app.reset_password()
 
                         MDRaisedButton:
                             text: "Giriş Yap"
-                            size_hint_y: None
-                            height: "75dp"
-                            pos_hint: {"center_x": 0.5}
+                            size_hint_x: 1
                             on_release: app.go_to_login()
+
 
             # Books Screen
             Screen:
@@ -237,30 +306,28 @@ BoxLayout:
                 BoxLayout:
                     orientation: 'vertical'
 
-                    MDTopAppBar:
-                        title: "Sessizce Oku"
-                        md_bg_color: app.theme_cls.primary_color
-                        specific_text_color: 1, 1, 1, 1
-                        elevation: 10
-                        left_action_items: [["menu", lambda x: app.open_nav_drawer()]]
+                MDTopAppBar:
+                    title: "Sessizce Oku"
+                    md_bg_color: app.theme_cls.primary_color
+                    specific_text_color: 1, 1, 1, 1
+                    elevation: 10
+                    left_action_items: [["menu", lambda x: app.open_nav_drawer()]]
 
-                    ScrollView:
-                        MDGridLayout:
-                            cols: 2
-                            spacing: "16dp"
-                            padding: "20dp"
-                            size_hint_y: None
-                            height: self.minimum_height
+                ScrollView:
+                    MDGridLayout:
+                        adaptive_size: True
+                        adaptive_height: True
+                        spacing: "16dp"
+                        padding: "20dp"
 
-                            MDCard:
-                                size_hint: None, None
-                                size: "120dp", "120dp"
-                                BoxLayout:
-                                    orientation: "vertical"
-                                    MDLabel:
-                                        text: "Kitap 1"
-                                    MDRaisedButton:
-                                        text: "Oku"
+                        MDCard:
+                            size_hint: 1, 1
+                            BoxLayout:
+                                orientation: "vertical"
+                                MDLabel:
+                                    text: "Kitap 1"
+                                MDRaisedButton:
+                                    text: "Oku"
 
             Screen:
                 name:"read_book"
@@ -412,8 +479,11 @@ class BookCatalogApp(MDApp):
             self.book_details = book_content
             print(f"Kitap detayları: {self.book_details}")
             title = self.book_details[0].get(
-                "book_title", "Başlık Bilgisi Yok")
+                "title", "Başlık Bilgisi Yok")
+            
             self.root.ids.book_title.text = title
+            self.sentences = sorted(self.show_next_sentence, key=lambda x:x['nth_sentence'])
+            self.current_sentence_index = 0
             self.show_next_sentence()  # İlk cümleyi göster
 
     def show_previous_sentence(self):
@@ -515,29 +585,54 @@ class BookCatalogApp(MDApp):
             print("Giriş başarısız!")
 
     def load_books(self):
-        books = get_books()
+            books = get_books()
+            screen_width = Window.width
+            screen_height = Window.height
+            print("Width:", Window.width)
+            print("Height:", Window.height)
+            # Başlangıçta her satırda 2 kitap olacak
+            books_per_row = 2
 
-        # ScrollView içinde bir GridLayout oluşturuyoruz
-        book_grid = GridLayout(
-            cols=2,  # Her satırda 2 sütun
-            spacing=dp(10),
-            padding=dp(10),
-            size_hint_y=None  # Dinamik olarak yüksekliği ayarlamak için
-        )
-        book_grid.bind(minimum_height=book_grid.setter(
-            'height'))  # İçeriğe göre yüksekliği ayarla
+            # Ekran genişliğine göre kitap sayısını ayarlıyoruz
+            if screen_width > 900:
+                books_per_row = 4
+            elif screen_width > 600:
+                books_per_row = 3
 
-        # Kitapları GridLayout'a ekliyoruz
-        for book in books:
-            book_id = book.get("book", 0)
-            title = book.get("title", "Başlık Bilgisi Yok")
-            image_url = book.get("cover")
-            deneme = server_url + "static/covers/"+image_url
+            # Ekran genişliğine göre kitap kartı boyutlarını ayarlıyoruz
+            # Boşlukları hesaba katarak boyut hesaplaması yapıyoruz
+            padding_left_right = dp(20)  # Sol ve sağ boşluklar
+            spacing = dp(10)  # Kitaplar arasındaki boşluk
 
-            book_card = Builder.load_string(f'''
+            # Her kitap kartı arasındaki boşluğu ve padding'i hesaba katarak kitap kartının genişliğini hesaplıyoruz
+            available_width = screen_width - padding_left_right - spacing * (books_per_row - 1)
+            book_width = available_width / books_per_row
+            print(screen_width)
+            # Kitap kartlarının yüksekliği, genişliğe orantılı olacak şekilde ayarlanır
+            book_height = book_width * 1.5  # Yükseklik genişliğin 1.5 katı olacak
+
+        # GridLayout'u dinamik yükseklikle ayarlıyoruz
+            book_grid = GridLayout(
+                cols=books_per_row,
+                spacing=spacing,
+                padding=[padding_left_right / 2, dp(10)],  # Sol ve sağ padding
+                size_hint_y=None  # Yüksekliği içeriğe göre ayarla
+            )
+            book_grid.bind(minimum_height=book_grid.setter('height'))  # İçeriğe göre yüksekliği ayarla
+
+            # Kitapları GridLayout'a ekliyoruz
+            for book in books:
+                book_id = book.get("book", 0)
+                title = book.get("title", "Başlık Bilgisi Yok")
+                image_url = book.get("cover")
+                image_url_full = server_url + "static/covers/" + image_url
+
+                # Kitap kartını orantılayarak oluşturuyoruz
+                print(book_width, book_height)
+                book_card = Builder.load_string(f'''
 MDCard:
     size_hint: None, None
-    size: "180dp", "300dp"
+    size: "{book_width*0.8}dp", "{book_height}dp"  # Kitap kartı boyutlarını burada orantılı olarak ayarlıyoruz
     elevation: 5
     radius: [12,]
     orientation: "vertical"
@@ -547,9 +642,9 @@ MDCard:
         radius: 12
         box_radius: [0, 0, 12, 12]
         box_color: 1, 1, 1, .2
-        source: "{deneme}"
+        source: "{image_url_full}"
         size_hint: None, None
-        size: "180dp", "240dp"
+        size: "{book_width*0.8}dp", "{book_height * 0.8}dp"  # Görsel boyutlarını orantılı olarak ayarlıyoruz
         pos_hint: {{"center_x": .5}}
         overlap: False
         lines: 2
@@ -569,21 +664,20 @@ MDCard:
             size_hint: None, None
             size: "40dp", "40dp"
 
-        MDIconButton:
-            icon: "bookmark-plus"
-            on_release: app.add_to_read_later({book_id})
-            size_hint: None, None
-            size: "40dp", "40dp"
             ''')
-            book_grid.add_widget(book_card)
+                book_grid.add_widget(book_card)
 
-        # ScrollView içine GridLayout'u yerleştiriyoruz
-        scroll_view = ScrollView(size_hint=(1, 1))
-        scroll_view.add_widget(book_grid)
+            # ScrollView içine GridLayout'u yerleştiriyoruz
+            scroll_view = ScrollView(size_hint=(1, 1))
+            scroll_view.add_widget(book_grid)
 
-        # Kitap ekranını temizleyip ScrollView'u ekliyoruz
-        self.root.ids.books_screen.clear_widgets()
-        self.root.ids.books_screen.add_widget(scroll_view)
+            # Kitap ekranını temizleyip ScrollView'u ekliyoruz
+            self.root.ids.books_screen.clear_widgets()
+            self.root.ids.books_screen.add_widget(scroll_view)
+
+
+
+
 
     def read_book(self, book_id):
         print(f"Kitap {book_id} okunuyor...")
@@ -602,22 +696,45 @@ MDCard:
     def go_to_forgot_password(self):
         self.root.ids.screen_manager.current = "forgot_password"
 
+
+
+
+
     def reset_password(self):
         # E-posta adresini al
         email = self.root.ids.email.text
+        password = self.root.ids.password.text
+        new_password = self.root.ids.new_password.text
+        confirm_password = self.root.ids.confirm_new_password.text
+        # Şifre doğrulama
+        if new_password != confirm_password:
+            show_popup("Hata", "Yeni şifre ve tekrar girilen şifre aynı değil!")
+            return
 
-        # Sunucuya e-posta adresi gönder
-        reset_url = server_url + "v1.0/auth/reset_password"
-        data = {"email": email}
-        response = requests.post(reset_url, json=data)
-
+        # Sunucuya şifre sıfırlama isteği gönder
+        reset_url = server_url + "api/users/get_all_users"
+        data = {"email": email, "new_password": new_password}
+        response = requests.get(reset_url, json=data)
+        is_valid = check_user_credentials(response.json(), email, hash_password(password))
+        print(f"pass: {password}, hashed {hash_password(password)}")
         if response.status_code == 200:
             # Şifre sıfırlama başarılı
-            print("Şifreniz sıfırlama talimatı gönderildi.")
-            self.root.ids.screen_manager.current = "login"
+            if(is_valid):
+                print("Şifre sıfırlama başarılı.")
+                self.root.ids.screen_manager.current = "login"
+            else:
+                show_popup("Hata", "Eski şifre bulunamadı!")
         else:
             # Şifre sıfırlama başarısız
-            print("Şifre sıfırlama başarısız!")
+            error_data = response.json()
+            
+            if error_data.get("error") == "old_password_not_found":
+                show_popup("Hata", "Eski şifre bulunamadı!")
+            elif error_data.get("error") == "password_mismatch":
+                show_popup("Hata", "Yeni şifre ve tekrar girilen şifre aynı değil!")
+            else:
+                show_popup("Hata", "Şifre sıfırlama başarısız! Lütfen tekrar deneyin.")
+
 
     def register(self):
         username = self.root.ids.register_username.text

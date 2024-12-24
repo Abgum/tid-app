@@ -18,7 +18,6 @@ def configure(binder: Binder) -> Binder:
 app = connexion.App(__name__, specification_dir="swagger/")
 CORS(app.app)
 app.add_api("tid_language_docs.yaml", resolver=RestyResolver("api"))
-FlaskInjector(app=app.app, modules=[configure])
 
 
 @app.route("/")
