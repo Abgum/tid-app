@@ -8,6 +8,10 @@ def get_all_books():
     return books.get_all_books(), 200
 
 
+def get_book_by_id(book_id):
+    return books.get_book_by_id(book_id), 200
+
+
 def get_user_favorite_books(user_id):
     return user_favorited_books.get_user_favorite_books(user_id), 200
 

@@ -327,26 +327,6 @@ BoxLayout:
                                     text: "Kitap 1"
                                 MDRaisedButton:
                                     text: "Oku"
-            Screen:
-                name: 'favorites'
-                BoxLayout:
-                    orientation: 'vertical'
-                    MDTopAppBar:
-                        title: "Favoriler"
-                        id:top_app_bar_favorites
-                        left_action_items: [["arrow-left", lambda x: app.go_to_books_screen()]]
-                        elevation: 10
-
-                    ScrollView:
-                        GridLayout:
-                            id: favorites_grid
-                            cols: 2
-                            size_hint_y: None
-                            height: self.minimum_height
-                            row_default_height: (self.width - self.cols*self.spacing[0])/self.cols
-                            row_force_default: True
-                            padding: dp(10), dp(10)
-                            spacing: dp(10)
 
             Screen:
                 name:"read_book"
@@ -427,7 +407,29 @@ BoxLayout:
                             size_hint_y: None
                             height: "50dp"
                             on_release: app.show_next_sentence()       
+            Screen:
+                name:"favorites"
+                id:favorites_screen
+                BoxLayout:
+                    orientation: 'vertical'
 
+                    MDTopAppBar:
+                        title: "Favori Kitaplar"
+                        md_bg_color: app.theme_cls.primary_color
+                        specific_text_color: 1, 1, 1, 1
+                        elevation: 10
+                        left_action_items: [["arrow-left", lambda x: app.go_to_books_screen()]]
+
+                    ScrollView:
+                        GridLayout:
+                            cols: 1
+                            spacing: "16dp"
+                            padding: "20dp"
+                            size_hint_y: None
+                            height: self.minimum_height
+                            
+
+                    
 
         MDNavigationDrawer:
             id: nav_drawer
@@ -460,7 +462,7 @@ class BookCatalogApp(MDApp):
 
     def go_to_favorites(self):
         self.get_favorite_books()
-        self.root.ids.screen_manager.current = 'favorites'
+        self.root.ids.screen_manager.current = "favorites"
 
     def get_favorite_books(self):
         favorite_url = server_url + "api/books/get_user_favorite_books/1"
@@ -623,6 +625,105 @@ class BookCatalogApp(MDApp):
             self.load_books()
         else:
             print(f"Giriş başarısız! Durum Kodu: {response.status_code}")
+
+    def display_favorite_books(self, favorite_books):
+        screen_width = Window.width
+        screen_height = Window.height
+        print("Width:", Window.width)
+        print("Height:", Window.height)
+        # Başlangıçta her satırda 2 kitap olacak
+        books_per_row = 2
+
+        # Ekran genişliğine göre kitap sayısını ayarlıyoruz
+        if screen_width > 900:
+            books_per_row = 4
+        elif screen_width > 600:
+            books_per_row = 3
+
+        # Ekran genişliğine göre kitap kartı boyutlarını ayarlıyoruz
+        # Boşlukları hesaba katarak boyut hesaplaması yapıyoruz
+        padding_left_right = dp(20)  # Sol ve sağ boşluklar
+        spacing = dp(10)  # Kitaplar arasındaki boşluk
+
+        # Her kitap kartı arasındaki boşluğu ve padding'i hesaba katarak kitap kartının genişliğini hesaplıyoruz
+        available_width = screen_width - \
+            padding_left_right - spacing * (books_per_row - 1)
+        book_width = available_width / books_per_row
+        print(screen_width)
+        # Kitap kartlarının yüksekliği, genişliğe orantılı olacak şekilde ayarlanır
+        book_height = book_width * 1.5  # Yükseklik genişliğin 1.5 katı olacak
+
+        # GridLayout'u dinamik yükseklikle ayarlıyoruz
+        book_grid = GridLayout(
+            cols=books_per_row,
+            spacing=spacing,
+            padding=[padding_left_right / 2, dp(10)],  # Sol ve sağ padding
+            size_hint_y=None  # Yüksekliği içeriğe göre ayarla
+        )
+        book_grid.bind(minimum_height=book_grid.setter(
+            'height'))  # İçeriğe göre yüksekliği ayarla
+
+        all_books = get_books()
+        # Kitapları GridLayout'a ekliyoruz
+        for all_book in all_books:
+            all_book_id = all_book.get("id")
+            all_book_cover = all_book.get("cover")
+            for book in favorite_books:
+                book_id = book.get("book_id")
+                if all_book_id == book_id:
+                    title = book.get("title", "Başlık Bilgisi Yok")
+                    image_url_full = server_url + "static/covers/" + all_book_cover
+
+                    # Kitap kartını orantılayarak oluşturuyoruz
+                    print(book_width, book_height)
+                    book_card = Builder.load_string(f'''
+MDCard:
+    size_hint: None, None
+    size: "{book_width*0.8}dp", "{book_height}dp"  # Kitap kartı boyutlarını burada orantılı olarak ayarlıyoruz
+    elevation: 5
+    radius: [12,]
+    orientation: "vertical"
+    padding: "8dp"
+
+    MDSmartTile:
+        radius: 12
+        box_radius: [0, 0, 12, 12]
+        box_color: 1, 1, 1, .2
+        source: "{image_url_full}"
+        size_hint: None, None
+        size: "{book_width*0.8}dp", "{book_height * 0.8}dp"  # Görsel boyutlarını orantılı olarak ayarlıyoruz
+        pos_hint: {{"center_x": .5}}
+        overlap: False
+        lines: 2
+        text: "{title}"
+        on_release: app.read_book({book_id})
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: "50dp"
+        padding: "5dp"
+        spacing: "10dp"
+
+        MDIconButton:
+            id: favorite_button
+            icon: "heart"
+            theme_text_color: "Custom"
+            text_color: 1, 1, 1, 1
+            on_release: app.add_to_favorites(self)
+            size_hint: None, None
+            size: "40dp", "40dp"
+            is_favorited: False
+
+            ''')
+                    book_grid.add_widget(book_card)
+
+        # ScrollView içine GridLayout'u yerleştiriyoruz
+        scroll_view = ScrollView(size_hint=(1, 1))
+        scroll_view.add_widget(book_grid)
+
+        # Favori kitap ekranını temizleyip ScrollView'u ekliyoruz
+        self.root.ids.favorites_screen.add_widget(scroll_view)
 
     def load_books(self):
         books = get_books()

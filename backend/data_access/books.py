@@ -23,6 +23,18 @@ def get_all_books():
     return tuples_to_dict(["id", "title", "cover"], read_records("books"))
 
 
+def get_book_by_id(book_id):
+    return next(
+        iter(
+            tuples_to_dict(
+                ["id", "title", "cover"],
+                read_records("books", f"id = {book_id}"),
+            )
+        ),
+        None,
+    )
+
+
 def delete_book_by_id(book_id):
     return delete_record("books", f"id = {book_id}")
 
