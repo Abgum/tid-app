@@ -22,6 +22,7 @@ def register(register_payload):
 
 def login(login_payload):
     user = users.get_user_by_email(login_payload["email"])
+    print(user)
     if not user:
         return {"message": "User with email not found"}, 400
     if (

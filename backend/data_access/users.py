@@ -18,7 +18,8 @@ def create_user(user_name, password, email, last_access):
 
 def get_all_users():
     return tuples_to_dict(
-        ["id", "name", "password", "email", "last_access"], read_records("users")
+        ["id", "name", "password", "email",
+            "last_access"], read_records("users")
     )
 
 
@@ -56,6 +57,5 @@ def get_todays_unique_visitors():
 
     # Execute query to fetch unique users who accessed today
     query = "SELECT COUNT(DISTINCT id) FROM users " "WHERE DATE(last_access) = %s"
-    cursor = execute_query(query, today)
-    unique_visitors = cursor.fetchone()[0]
-    return unique_visitors
+    unique_visitors = execute_query(query, [today])
+    return unique_visitors[0][0]

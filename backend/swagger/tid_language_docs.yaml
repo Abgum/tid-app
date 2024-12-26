@@ -171,6 +171,48 @@ paths:
         409:
           description: an existing item already exists
 
+  /book_contents/add_sentence_transcription:
+    post:
+      operationId: api.book_contents.add_sentence_transcription
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: st_payload
+          description: Sentence transcription to add
+          schema:
+            $ref: "#/definitions/SentenceTranscription"
+      responses:
+        201:
+          description: Successfully added sentence transcription to the DB
+        400:
+          description: invalid input, object invalid
+        409:
+          description: an existing item already exists
+
+  /book_contents/add_transcription:
+    post:
+      operationId: api.book_contents.add_transcription
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: transcript_payload
+          description: transcription to add
+          schema:
+            $ref: "#/definitions/Transcription"
+      responses:
+        201:
+          description: Successfully added transcription to the DB
+        400:
+          description: invalid input, object invalid
+        409:
+          description: an existing item already exists
+
   /analytics/get_daily_unique_visits:
     get:
       operationId: api.analytics.get_daily_unique_visits
@@ -192,6 +234,30 @@ paths:
   /users/get_all_users:
     get:
       operationId: api.users.get_all_users
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Success
+
+  /transcripts/get_all_transcripts:
+    get:
+      operationId: api.transcripts.get_all_transcripts
+      produces:
+        - application/json
+      responses:
+        200:
+          description: Success
+
+  /transcripts/get_by_transcript_string/{transcript_string}:
+    get:
+      operationId: api.transcripts.get_by_transcript_string
+      parameters:
+        - in: path
+          name: transcript_string
+          type: string
+          required: true
+          description: transcript_string.
       produces:
         - application/json
       responses:
@@ -268,6 +334,19 @@ definitions:
       nth_sentence: { type: string }
       book_id: { type: string }
       sentence: { type: string }
+  SentenceTranscription:
+    type: object
+    properties:
+      id: { type: string }
+      transcript_id: { type: string }
+      sentence_id: { type: string }
+      nth_transcription: { type: string }
+  Transcription:
+    type: object
+    properties:
+      id: { type: string }
+      transcription: { type: string }
+      media_path: { type: string }
   Register:
     type: object
     properties:

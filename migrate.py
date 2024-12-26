@@ -7,9 +7,9 @@ def create_tables():
     conn_params = {
         "dbname": "postgres",
         "user": "postgres",
-        "password": "1234567tS",
+        "password": "12345",
         "host": "localhost",
-        "port": "5432",
+        "port": "5433",
     }
 
     try:
@@ -88,7 +88,7 @@ def create_tables():
                 "book_id INT NOT NULL REFERENCES books(id),"
                 "last_read_sentence_id INT REFERENCES sentences(id)"
                 ")"
-            ),
+            )
         }
 
         for table_name, table_query in tables.items():

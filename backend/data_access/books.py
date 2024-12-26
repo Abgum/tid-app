@@ -8,7 +8,15 @@ from data_access.base_funcs import (
 
 
 def create_book(title, cover):
-    return create_record("books", ["title", "cover"], [title, cover])
+    return next(
+        iter(
+            tuples_to_dict(
+                ["id", "title", "cover"],
+                create_record("books", ["title", "cover"], [title, cover]),
+            )
+        ),
+        None,
+    )
 
 
 def get_all_books():
@@ -27,6 +35,5 @@ def get_books_and_favorited_counts():
         "GROUP BY b.id, b.title "
         "ORDER BY favorited_count DESC"
     )
-    cursor = execute_query(query)
-    books_favorited_counts = cursor.fetchall()
+    books_favorited_counts = execute_query(query)
     return tuples_to_dict(["title", "cover", "favorited_count"], books_favorited_counts)

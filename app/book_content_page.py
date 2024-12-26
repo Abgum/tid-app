@@ -150,6 +150,67 @@ class BookContentPage(BoxLayout):
                 self.current_story
             )
 
+    def display_current_sentence(self):
+        # Get the current sentence and its GIFs
+        if self.current_story:
+            current_sentence = next(
+                sentence
+                for sentence in self.current_story
+                if (sentence["nth_sentence"] == self.current_sentence_index)
+            )
+            sentence = current_sentence["sentence"]
+            gifs = current_sentence["transcript"].split(",")
+
+            # Update the sentence label
+            self.ids.sentence_text.text = sentence  # Updated in KV file
+            self.ids.sentence_text.texture_update()
+
+            # Remove existing GIFs
+            for old_gif in self.ids.transcript_layout.children[:]:
+                self.ids.transcript_layout.remove_widget(old_gif)
+
+            # Add new GIFs
+            for gif in gifs:
+                gif_box = BoxLayout(
+                    orientation="vertical", size_hint=(None, 1), width=200
+                )
+
+                # Add GIF image
+                if gif.split(".")[-1] in ["mp4", "gif"]:
+                    gif_image = Video(
+                        source=(server_url + "static/sign_language_media/" + gif),
+                        state="play",
+                    )
+                else:
+                    gif_image = AsyncImage(
+                        source=(server_url + "static/sign_language_media/" + gif),
+                        size_hint=(1, 0.8),
+                        size=(200, 80),  # Size of the GIF
+                    )
+                gif_box.add_widget(gif_image)
+
+                # Add file name label
+                gif_label = Label(
+                    text=gif.split("/")[-1].split(".")[
+                        0
+                    ],  # Extract file name from path
+                    size_hint=(1, 0.2),
+                    font_size=18,
+                    halign="center",
+                    valign="middle",
+                    color=(0, 0, 0, 1),
+                )
+                gif_label.bind(size=gif_label.setter("text_size"))
+                gif_box.add_widget(gif_label)
+
+                self.ids.transcript_layout.add_widget(gif_box)
+
+            # Enable or disable navigation buttons based on current index
+            self.ids.left_button.disabled = self.current_sentence_index == 1
+            self.ids.right_button.disabled = self.current_sentence_index == len(
+                self.current_story
+            )
+
     def show_next_sentence(self, instance):
         if self.current_sentence_index < len(self.current_story):
             self.current_sentence_index += 1

@@ -18,5 +18,27 @@ def get_all_transcripts():
     )
 
 
+def get_transcript_by_id(transcript_id):
+    return next(
+        iter(
+            tuples_to_dict(
+                ["id", "media_path", "transcription"],
+                read_records("transcripts", f"id = {transcript_id}"),
+            )
+        )
+    )
+
+
+def get_transcript_by_string(transcript_string):
+    return next(
+        iter(
+            tuples_to_dict(
+                ["id", "media_path", "transcription"],
+                read_records("transcripts", f"transcription = '{transcript_string}'"),
+            )
+        )
+    )
+
+
 def delete_transcript_by_id(transcript_id):
     return delete_record("transcripts", f"id = {transcript_id}")
