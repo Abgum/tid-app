@@ -164,22 +164,50 @@ def add_book_post():
         }
         created_sentence = requests.post(
             "http://127.0.0.1:2020/api/book_contents/add_sentence", json=sentence_data
-        ).json()
-        sentence_id = created_sentence["id"]
+        )
+        if created_sentence.status_code != 200:
+            print(
+                "Error in creating sentence: ",
+                created_sentence.json(),
+                " Status code:",
+                created_sentence.status_code,
+            )
+            return {"error": "Internal Server Error"}, 500
+        sentence_id = created_sentence.json()["id"]
         for i, file in enumerate(files):
-            transcript_id = requests.get(
+            transcript = requests.get(
                 "http://127.0.0.1:2020/api/transcripts/get_by_transcript_string/"
                 + file.split(".")[0]
-            ).json()
+            )
+            if transcript.status_code != 200:
+                print(
+                    "Error in getting transcript: ",
+                    transcript.json(),
+                    " Status code:",
+                    transcript.status_code,
+                )
+                return {"error": "Internal Server Error"}, 500
+            transcript = transcript.json()
+            if transcript is None:
+                print("Transcript not found: ", file.split(".")[0])
+                return {"error": "Transcript not found"}, 400
             st_data = {
-                "nth_transcription": i + 1,
-                "sentence_id": sentence_id,
-                "transcript_id": transcript_id["id"],
+                "nth_transcription": str(i + 1),
+                "sentence_id": str(sentence_id),
+                "transcript_id": str(transcript["id"]),
             }
-            requests.post(
+            add_resp = requests.post(
                 "http://127.0.0.1:2020/api/book_contents/add_sentence_transcription",
                 json=st_data,
             )
+            if add_resp.status_code != 200:
+                print(
+                    "Error in adding transcription: ",
+                    add_resp.json(),
+                    " Status code:",
+                    add_resp.status_code,
+                )
+                return {"error": "Internal Server Error"}, 500
     return redirect(url_for("book_catalog"))
 
 
